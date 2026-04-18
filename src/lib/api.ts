@@ -51,13 +51,28 @@ export async function apiHealth(): Promise<boolean> {
   }
 }
 
+/** Avoids `Unexpected end of JSON input` when the body is empty (API down, bad proxy, HTML error page). */
+async function parseJsonBody<T>(r: Response, what: string): Promise<T> {
+  const text = await r.text();
+  if (!text.trim()) {
+    throw new Error(
+      `${what}: empty response (HTTP ${r.status}). Is the SOC API running on http://127.0.0.1:4000?`,
+    );
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(`${what}: not JSON (HTTP ${r.status}). Check API URL and Vite /api proxy.`);
+  }
+}
+
 export async function apiLogin(email: string, password: string): Promise<{ token: string; user: AuthUser }> {
   const r = await fetch(`${apiBase()}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  const data = (await r.json()) as { token?: string; user?: AuthUser; error?: string };
+  const data = await parseJsonBody<{ token?: string; user?: AuthUser; error?: string }>(r, "Login");
   if (!r.ok) throw new Error(data.error ?? `Login failed (${r.status})`);
   if (!data.token || !data.user) throw new Error("Invalid login response");
   return { token: data.token, user: data.user };
@@ -65,7 +80,7 @@ export async function apiLogin(email: string, password: string): Promise<{ token
 
 export async function apiMe(): Promise<AuthUser> {
   const r = await apiFetch("/api/auth/me");
-  const data = (await r.json()) as { user?: AuthUser; error?: string };
+  const data = await parseJsonBody<{ user?: AuthUser; error?: string }>(r, "/auth/me");
   if (!r.ok) throw new Error(data.error ?? "Not authenticated");
   if (!data.user) throw new Error("Invalid /auth/me response");
   return data.user;

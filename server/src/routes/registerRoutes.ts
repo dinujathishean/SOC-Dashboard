@@ -29,6 +29,7 @@ import {
 } from "../controllers/notificationsController.js";
 import { auditGet } from "../controllers/auditController.js";
 import { authMiddleware, requireAnalyst, requireAuth } from "../middleware/auth.js";
+import { asyncRoute } from "../middleware/asyncRoute.js";
 
 export function registerRoutes(app: Express) {
   const api = Router();
@@ -41,41 +42,41 @@ export function registerRoutes(app: Express) {
 
   api.get("/auth/me", authMeGet);
 
-  api.get("/dashboard", dashboardGet);
-  api.get("/metrics", metricsGet);
-  api.get("/summary", summaryGet);
-  api.get("/analytics", analyticsGet);
+  api.get("/dashboard", asyncRoute(dashboardGet));
+  api.get("/metrics", asyncRoute(metricsGet));
+  api.get("/summary", asyncRoute(summaryGet));
+  api.get("/analytics", asyncRoute(analyticsGet));
 
-  api.get("/search", searchGet);
+  api.get("/search", asyncRoute(searchGet));
 
-  api.get("/export/alerts", exportAlertsCsvGet);
-  api.get("/export/incidents", exportIncidentsCsvGet);
+  api.get("/export/alerts", asyncRoute(exportAlertsCsvGet));
+  api.get("/export/incidents", asyncRoute(exportIncidentsCsvGet));
 
-  api.get("/notifications", notificationsGet);
-  api.patch("/notifications/:id/read", notificationReadPatch);
-  api.post("/notifications/read-all", notificationsReadAllPost);
+  api.get("/notifications", asyncRoute(notificationsGet));
+  api.patch("/notifications/:id/read", asyncRoute(notificationReadPatch));
+  api.post("/notifications/read-all", asyncRoute(notificationsReadAllPost));
 
-  api.get("/audit", auditGet);
+  api.get("/audit", asyncRoute(auditGet));
 
-  api.get("/users", usersGet);
+  api.get("/users", asyncRoute(usersGet));
 
-  api.get("/alerts", alertsGet);
-  api.post("/alerts/:id/convert", requireAnalyst, alertConvertPost);
-  api.patch("/alerts/:id", requireAnalyst, alertsPatch);
+  api.get("/alerts", asyncRoute(alertsGet));
+  api.post("/alerts/:id/convert", requireAnalyst, asyncRoute(alertConvertPost));
+  api.patch("/alerts/:id", requireAnalyst, asyncRoute(alertsPatch));
 
-  api.get("/incidents", incidentsGet);
-  api.get("/incidents/:id", incidentByIdGet);
-  api.patch("/incidents/:id/status", requireAnalyst, incidentStatusPatch);
-  api.patch("/incidents/:id", requireAnalyst, incidentPatch);
+  api.get("/incidents", asyncRoute(incidentsGet));
+  api.get("/incidents/:id", asyncRoute(incidentByIdGet));
+  api.patch("/incidents/:id/status", requireAnalyst, asyncRoute(incidentStatusPatch));
+  api.patch("/incidents/:id", requireAnalyst, asyncRoute(incidentPatch));
 
-  api.get("/activity", activityGet);
+  api.get("/activity", asyncRoute(activityGet));
 
-  api.post("/logs/upload", requireAnalyst, logsUploadPost);
-  api.post("/detection/run", requireAnalyst, detectionRunPost);
-  api.post("/simulation/run", requireAnalyst, simulationRunPost);
+  api.post("/logs/upload", requireAnalyst, asyncRoute(logsUploadPost));
+  api.post("/detection/run", requireAnalyst, asyncRoute(detectionRunPost));
+  api.post("/simulation/run", requireAnalyst, asyncRoute(simulationRunPost));
 
-  api.post("/tick/live", requireAnalyst, tickLivePost);
-  api.post("/tick/ingest", requireAnalyst, tickIngestPost);
+  api.post("/tick/live", requireAnalyst, asyncRoute(tickLivePost));
+  api.post("/tick/ingest", requireAnalyst, asyncRoute(tickIngestPost));
 
   app.use("/api", api);
 }
